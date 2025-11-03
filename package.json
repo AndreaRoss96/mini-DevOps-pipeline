@@ -1,0 +1,23 @@
+{
+  "name": "mini-devops-pipeline",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreaRoss96/mini-DevOps-pipeline.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AndreaRoss96/mini-DevOps-pipeline/issues"
+  },
+  "homepage": "https://github.com/AndreaRoss96/mini-DevOps-pipeline#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
