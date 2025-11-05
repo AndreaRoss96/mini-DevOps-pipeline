@@ -71,10 +71,7 @@ jobs:
       - name: Install Snyk
         run: npm install -g snyk
 
-      # Run the Snyk test
-      # This is the "pipeline enforcement"
       - name: Snyk Test
         run: snyk test --fail-on=high
-        # We pass the secret token to the environment
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
