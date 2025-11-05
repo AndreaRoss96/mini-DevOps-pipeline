@@ -24,3 +24,5 @@ eslint, @eslint/js, globals
 ✔ Which package manager do you want to use? · npm
 
 npm install eslint-plugin-jest --save-dev
+
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
