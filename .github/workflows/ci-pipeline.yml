@@ -1,0 +1,77 @@
+name: Node.js CI Pipeline
+
+# Triggers the workflow on push and pull requests targeting the 'develop' branch
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Check out the repository code
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Step 2: Set up Node.js environment
+    # This action also includes built-in dependency caching
+    - name: Set up Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+
+    # Step 3: Install dependencies from package-lock.json
+    - name: Install Dependencies
+      run: npm ci # 'ci' ~ 'install' but safer for pipelines
+
+    # Step 4: Run the tests
+    - name: Run Tests
+      run: npm test
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
+
+      # Run the lint script from package.json
+      - name: Run Lint
+        run: npm run lint
+
+  security-scan:
+    name: Snyk Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
+        
+      # Install Snyk CLI
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      - name: Snyk Test
+        run: snyk test --fail-on=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
