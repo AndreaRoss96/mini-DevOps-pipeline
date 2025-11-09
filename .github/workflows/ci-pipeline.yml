@@ -147,10 +147,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG
-          # Pass the image URI to the next job
-          echo "image_uri=$ECR_REGISTRY/${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          IMAGE_URI=$ECR_REGISTRY/${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
 
     outputs:
       image_uri: ${{ steps.build-image.outputs.image_uri }}
@@ -171,6 +171,10 @@ jobs:
       contents: read
 
     steps:
+      - name: Debug image URI
+        run: |
+          echo "Image URI is: ${{ needs.build-and-push-to-ecr.outputs.image_uri }}"
+          
       - name: Deploy new image to ECS Fargate
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         id: render-task
