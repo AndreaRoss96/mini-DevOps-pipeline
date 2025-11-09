@@ -97,14 +97,21 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      #  2. GitHub repository names in images must be lowercase
+      - name: Set lowercase repo name
+        id: repo
+        run: echo "repo_name=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      # 2. Build and push the Docker image
+
+      # 3. Build and push the Docker image
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          # tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          tags: ghcr.io/${{ steps.repo.outputs.repo_name }}:${{ github.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.repositoryUrl }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -147,7 +154,6 @@ jobs:
 
     outputs:
       image_uri: ${{ steps.build-image.outputs.image_uri }}
-
 
 
       ###########
