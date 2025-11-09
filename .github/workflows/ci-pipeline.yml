@@ -165,13 +165,19 @@ jobs:
         run: |
           IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}"
           echo "Computed IMAGE_URI=$IMAGE_URI"
-          # Use this line for modern runners:
-          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
-          # Use this line for legacy runners (uncomment if needed):
-          # echo "::set-output name=image_uri::$IMAGE_URI"
+          echo "::set-output name=image_uri::$IMAGE_URI"
+
+      - name: Verify output
+        run: |
+          echo "Output image_uri is: ${{ steps.set_output.outputs.image_uri }}"
+          if [ -z "${{ steps.set_output.outputs.image_uri }}" ]; then
+            echo "ERROR: image_uri was not set"
+            exit 1
+          fi
 
     outputs:
       image_uri: ${{ steps.set_output.outputs.image_uri }}
+
 
   deploy-to-ecs-fargate:
     name: Deploy to ECS Fargate
