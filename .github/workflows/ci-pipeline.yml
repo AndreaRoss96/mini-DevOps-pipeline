@@ -150,7 +150,7 @@ jobs:
           fi
       
       - name: Build and push image to ECR
-        id: image_build
+        id: build-image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -175,7 +175,7 @@ jobs:
       #     echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
 
     outputs:
-      image_uri: ${{ steps.build-image.outputs.image_uri }}
+      image_uri: ${{ steps.set_output.outputs.image_uri }}
 
 
       ###########
