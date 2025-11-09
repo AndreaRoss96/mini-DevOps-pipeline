@@ -72,7 +72,7 @@ jobs:
         run: npm install -g snyk
 
       - name: Snyk Test
-        run: snyk test --fail-on=high
+        run: snyk test --severity-threshold=high --fail-on=all
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -155,12 +155,13 @@ jobs:
     name: Deploy to ECS Fargate
     runs-on: ubuntu-latest
     needs: build-and-push-to-ecr
-    # This job ONLY runs on a push to 'develop'
+    
+    # This job runs on a push to 'develop'
     if: github.event_name == 'push'
 
     # Add permissions for OIDC
     permissions:
-      id-token: write # Required for OIDC
+      id-token: write
       contents: read
 
     steps:
@@ -176,6 +177,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.render-task.outputs.task-definition }}
-          service: YOUR_ECS_SERVICE_NAME # You need to create the service manually or via another Terraform resource
+          service: ECS-Console-V2-Service-node-app-service-node-app-cluster-70da974d
           cluster: node-app-cluster
-          # Setting 'wait-for-service-stability' to true is recommended
+          
