@@ -136,28 +136,50 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ secrets.AWS_REGION }}
-
+          
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image to ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Debug registry
         run: |
-          IMAGE_URI=$ECR_REGISTRY/${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG
-          docker build -t $IMAGE_URI .
-          docker push $IMAGE_URI
+          echo "login-ecr outputs: registry=${{ steps.login-ecr.outputs.registry }}"
+          if [ -z "${{ steps.login-ecr.outputs.registry }}" ]; then
+            echo "ERROR: registry is empty"
+            exit 1
+          fi
+      
+      - name: Build and push image to ECR
+        id: image_build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}
+
+      - name: Set job output image_uri
+        id: set_output
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}"
+          echo "Computed IMAGE_URI=$IMAGE_URI"
           echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+      # - name: Build, tag, and push image to ECR
+      #   id: build-image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     IMAGE_TAG: ${{ github.sha }}
+      #   run: |
+      #     IMAGE_URI=$ECR_REGISTRY/${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG
+      #     docker build -t $IMAGE_URI .
+      #     docker push $IMAGE_URI
+      #     echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
 
     outputs:
       image_uri: ${{ steps.build-image.outputs.image_uri }}
 
 
       ###########
-  deploy-to-app-runner:
+  deploy-to-ecs-fargate:
     name: Deploy to ECS Fargate
     runs-on: ubuntu-latest
     needs: build-and-push-to-ecr
@@ -174,14 +196,14 @@ jobs:
       - name: Debug image URI
         run: |
           echo "Image URI is: ${{ needs.build-and-push-to-ecr.outputs.image_uri }}"
-          
+
       - name: Deploy new image to ECS Fargate
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         id: render-task
         with:
-          task-definition: ./terraform/app-task-definition.json # Create this file manually after step 1
+          task-definition: ./terraform/app-task-definition.json
           container-name: node-app-container
-          image: ${{ needs.build-and-push-to-ecr.outputs.image_uri }} # The image URI from the previous job
+          image: ${{ needs.build-and-push-to-ecr.outputs.image_uri }} #  from the previous job
 
       - name: Deploy ECS Task Definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

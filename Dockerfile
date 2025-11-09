@@ -1,11 +1,8 @@
 # BUILD
-FROM node:18-slim AS builder
-
+FROM node:18-alpine AS builder
 WORKDIR /app
-
 COPY package*.json ./
-# Install *only* production dependencies
-RUN npm ci --only=production
+RUN npm ci --production
 COPY . .
 
 # PRODUCTION
