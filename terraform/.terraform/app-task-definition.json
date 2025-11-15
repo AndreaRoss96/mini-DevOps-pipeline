@@ -1,0 +1,23 @@
+{
+  "family": "node-app-task",
+  "containerDefinitions": [
+    {
+      "name": "node-app-container",
+      "image": "REPLACE_IMAGE", 
+      "cpu": 256,
+      "memory": 512,
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 3000, "hostPort": 3000 }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/node-app",
+          "awslogs-region": "eu-west-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

@@ -1,3 +1,9 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+terraform/.terraform/providers/*
+*.lock.*
+
 # Logs
 logs
 *.log
