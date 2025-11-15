@@ -140,13 +140,7 @@ The app should display the latest code changes, confirming successful artifact f
 
 ---
 
-## 5. Node.js CI/CD Pipeline Project
-
-This repository serves as a **demo project** for a postgraduate-level CI/CD pipeline assignment.
-
----
-
-## 6. Dependencies and Setup
+## 5. Dependencies and Setup
 
 ### Initialize and Install Dependencies
 
