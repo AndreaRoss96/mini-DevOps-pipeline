@@ -9,118 +9,203 @@ terraform {
 
 provider "aws" {
   region = "eu-west-1"
-  profile = "default"
 }
 
-# Create the ECR Repository
+############################
+# SECURITY GROUPS
+############################
+
+resource "aws_security_group" "node_app_sg" {
+  name        = "node-app-sg"
+  description = "SG for Node App"
+  vpc_id      = "vpc-066085ae36844f7b6"
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "alb_sg" {
+  name        = "alb-sg"
+  description = "SG for ALB"
+  vpc_id      = "vpc-066085ae36844f7b6"
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "grafana_sg" {
+  name        = "grafana-ecs-sg"
+  description = "SG for Grafana ECS"
+  vpc_id      = "vpc-066085ae36844f7b6"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group_rule" "grafana_ingress_3000" {
+  type                     = "ingress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.grafana_sg.id
+  source_security_group_id = aws_security_group.alb_sg.id
+}
+
+############################
+# ECR REPOSITORY
+############################
+
 resource "aws_ecr_repository" "app_repo" {
   name = "ecr-devops-pipeline"
 }
 
-# ECS Cluster
-resource "aws_ecs_cluster" "app_cluster" {
+############################
+# ECS CLUSTER
+############################
+
+resource "aws_ecs_cluster" "cluster" {
   name = "node-app-cluster"
 
-  
   setting {
     name  = "containerInsights"
     value = "enabled"
   }
 }
 
-resource "aws_cloudwatch_log_group" "ecs_node_app" {
-  name              = "/ecs/node-app"
-  retention_in_days = 14
+############################
+# LOAD BALANCER & TARGET GROUP
+############################
+
+resource "aws_lb" "alb" {
+  name               = "main-alb"
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = ["subnet-04c85bb40bad4540b", "subnet-0a0a9410629a720d0"] # REPLACE with real subnets
 }
 
-resource "aws_cloudwatch_dashboard" "ecs_dashboard" {
-  dashboard_name = "ECS-Fargate-Monitoring"
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type = "metric",
-        properties = {
-          metrics = [
-            [ "ECS/ContainerInsights", "CpuUtilized", "ClusterName", aws_ecs_cluster.app_cluster.name ],
-            [ ".", "MemoryUtilized", ".", "." ]
-          ],
-          view   = "timeSeries",
-          stacked = false,
-          region = "eu-west-1",
-          title  = "ECS Cluster CPU and Memory Usage"
-        }
-      }
-    ]
-  })
+resource "aws_lb_target_group" "grafana_tg" {
+  name     = "grafana-tg"
+  port     = 3000
+  protocol = "HTTP"
+  target_type = "ip"
+  vpc_id   = "vpc-066085ae36844f7b6"
 }
 
-resource "aws_cloudwatch_metric_alarm" "high_cpu" {
-  alarm_name          = "HighCPUUsage"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CpuUtilized"
-  namespace           = "ECS/ContainerInsights"
-  period              = 60
-  statistic           = "Average"
-  threshold           = 80
-  alarm_description   = "ECS CPU usage too high"
-  dimensions = {
-    ClusterName = aws_ecs_cluster.app_cluster.name
+resource "aws_lb_listener" "grafana_listener" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.grafana_tg.arn
   }
+  
+  depends_on = [
+    aws_lb_target_group.grafana_tg
+  ]
 }
 
+############################
+# ECS TASK DEFINITIONS
+############################
 
-# IAM Role for ECS Task Execution (for pulling ECR image)
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
+      Effect = "Allow"
       Principal = {
         Service = "ecs-tasks.amazonaws.com"
       }
+      Action = "sts:AssumeRole"
     }]
   })
 }
 
-# Attach policy for Task Execution
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_attach" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# ECS Task Definition
-resource "aws_ecs_task_definition" "app_task" {
-  family                   = "node-app-task"
-  requires_compatibilities = ["FARGATE"]
+resource "aws_ecs_task_definition" "grafana" {
+  family                   = "grafana-task"
   network_mode             = "awsvpc"
-  cpu                      = 256
-  memory                   = 512
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
-      name      = "node-app-container"
-      image     = "${aws_ecr_repository.app_repo.repository_url}:latest"
-      cpu       = 256
-      memory    = 512
-      essential = true
+      name  = "grafana"
+      image = "grafana/grafana:latest"
       portMappings = [
-        {
-          containerPort = 3000
-          hostPort      = 3000
-        }
+        { containerPort = 3000, hostPort = 3000 }
       ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group": aws_cloudwatch_log_group.ecs_node_app.name,
-          "awslogs-region": "eu-west-1",
-          "awslogs-stream-prefix": "ecs"
-        }
-      }
     }
   ])
+}
+
+############################
+# ECS SERVICES
+############################
+
+resource "aws_ecs_service" "grafana_service" {
+  name            = "grafana-service"
+  cluster         = aws_ecs_cluster.cluster.id
+  task_definition = aws_ecs_task_definition.grafana.arn
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = ["subnet-04c85bb40bad4540b", "subnet-0a0a9410629a720d0"]
+    security_groups = [aws_security_group.grafana_sg.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.grafana_tg.arn
+    container_name   = "grafana"
+    container_port   = 3000
+  }
+
+  depends_on = [
+    aws_ecs_cluster.cluster,
+    aws_lb_listener.grafana_listener
+  ]
 }
