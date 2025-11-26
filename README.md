@@ -31,9 +31,9 @@ The target deployment platform is **Amazon Elastic Container Service (ECS) Farga
 The pipeline follows a [**GitOps**](https://www.bmc.com/blogs/gitops-cloud-native-app-delivery/) model, ensuring full automation and traceability from code commit to service runtime.
 
 ```text
-+-----------------+       (1) Code Commit       +-------------------+
-|   Developer     | --------------------------> | GitHub Repository |
-+-----------------+                             +-------------------+
++-----------------+   (1) Code Commit    +-------------------+
+|   Developer     | -------------------> | GitHub Repository |
++-----------------+                      +-------------------+
                                                     |
                                                     v
 +---------------------------------------------------------------------------------------------------------+
@@ -72,6 +72,11 @@ To use this CI/CD pipeline, ensure the following components are installed locall
 ### 3.2 Infrastructure Provisioning (Terraform)
 
 All infrastructure code is defined in the `terraform/` directory.
+
+0. **change directory** into `terraform/`:
+   ```bash
+   cd terraform
+   ```
 
 1. **Initialize Terraform:**
 
@@ -174,7 +179,7 @@ npm install eslint-plugin-jest --save-dev
 
 ---
 
-### Docker Installation (Ubuntu Example)
+### Docker Installation
 
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
