@@ -203,7 +203,9 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 │   ├── versions.tf         # Terraform and provider versions
 │   └── vpc.tf              # VPC (Virtual Private Cloud) configuration
 └── tests/                  # Test files
-    └── app.test.js         # Application tests
+│   └── app.test.js         # Application tests
+└── .github/workflow
+    └── ci-pipeline.yml     # Pipeline definition for GitHub Action 
 ```
 
 ---
