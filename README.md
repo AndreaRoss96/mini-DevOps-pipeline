@@ -69,6 +69,7 @@ To use this CI/CD pipeline, ensure the following components are installed locall
 
 ---
 
+
 ### 3.2 Infrastructure Provisioning (Terraform)
 
 All infrastructure code is defined in the `terraform/` directory.
@@ -183,6 +184,26 @@ npm install eslint-plugin-jest --save-dev
 
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+## 5.1. Folder Structure
+```
+.
+├── app.js                  # Main application entry point
+├── Dockerfile              # Docker configuration for containerization
+├── eslint.config.mjs       # ESLint configuration for code linting
+├── package.json            # Node.js dependencies and project metadata
+├── package-lock.json       # Locked versions of Node.js dependencies
+├── README.md               # Project documentation
+├── server.js               # Server-side logic
+├── terraform/              # Infrastructure as Code (IaC) configurations
+│   ├── ecs.tf              # ECS (Elastic Container Service) configuration
+│   ├── iam.tf              # IAM (Identity and Access Management) policies
+│   ├── monitoring.tf       # Monitoring and alerting setup
+│   ├── versions.tf         # Terraform and provider versions
+│   └── vpc.tf              # VPC (Virtual Private Cloud) configuration
+└── tests/                  # Test files
+    └── app.test.js         # Application tests
 ```
 
 ---
