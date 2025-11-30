@@ -31,9 +31,9 @@ The target deployment platform is **Amazon Elastic Container Service (ECS) Farga
 The pipeline follows a [**GitOps**](https://www.bmc.com/blogs/gitops-cloud-native-app-delivery/) model, ensuring full automation and traceability from code commit to service runtime.
 
 ```text
-+-----------------+       (1) Code Commit       +-------------------+
-|   Developer     | --------------------------> | GitHub Repository |
-+-----------------+                             +-------------------+
++-----------------+   (1) Code Commit    +-------------------+
+|   Developer     | -------------------> | GitHub Repository |
++-----------------+                      +-------------------+
                                                     |
                                                     v
 +---------------------------------------------------------------------------------------------------------+
@@ -69,9 +69,15 @@ To use this CI/CD pipeline, ensure the following components are installed locall
 
 ---
 
+
 ### 3.2 Infrastructure Provisioning (Terraform)
 
 All infrastructure code is defined in the `terraform/` directory.
+
+0. **change directory** into `terraform/`:
+   ```bash
+   cd terraform
+   ```
 
 1. **Initialize Terraform:**
 
@@ -140,13 +146,7 @@ The app should display the latest code changes, confirming successful artifact f
 
 ---
 
-## 5. Node.js CI/CD Pipeline Project
-
-This repository serves as a **demo project** for a postgraduate-level CI/CD pipeline assignment.
-
----
-
-## 6. Dependencies and Setup
+## 5. Dependencies and Setup
 
 ### Initialize and Install Dependencies
 
@@ -180,10 +180,30 @@ npm install eslint-plugin-jest --save-dev
 
 ---
 
-### Docker Installation (Ubuntu Example)
+### Docker Installation
 
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+## 5.1. Folder Structure
+```
+.
+├── app.js                  # Main application entry point
+├── Dockerfile              # Docker configuration for containerization
+├── eslint.config.mjs       # ESLint configuration for code linting
+├── package.json            # Node.js dependencies and project metadata
+├── package-lock.json       # Locked versions of Node.js dependencies
+├── README.md               # Project documentation
+├── server.js               # Server-side logic
+├── terraform/              # Infrastructure as Code (IaC) configurations
+│   ├── ecs.tf              # ECS (Elastic Container Service) configuration
+│   ├── iam.tf              # IAM (Identity and Access Management) policies
+│   ├── monitoring.tf       # Monitoring and alerting setup
+│   ├── versions.tf         # Terraform and provider versions
+│   └── vpc.tf              # VPC (Virtual Private Cloud) configuration
+└── tests/                  # Test files
+    └── app.test.js         # Application tests
 ```
 
 ---
