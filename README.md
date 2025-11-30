@@ -189,13 +189,13 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 ## 5.1. Folder Structure
 ```
 .
-├── app.js                  # Main application entry point
+├── app.js                  # Express application setup and routes
 ├── Dockerfile              # Docker configuration for containerization
 ├── eslint.config.mjs       # ESLint configuration for code linting
 ├── package.json            # Node.js dependencies and project metadata
 ├── package-lock.json       # Locked versions of Node.js dependencies
 ├── README.md               # Project documentation
-├── server.js               # Server-side logic
+├── server.js               # Entry point for starting the server
 ├── terraform/              # Infrastructure as Code (IaC) configurations
 │   ├── ecs.tf              # ECS (Elastic Container Service) configuration
 │   ├── iam.tf              # IAM (Identity and Access Management) policies
